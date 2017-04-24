@@ -20,7 +20,7 @@ class Config():
 	data = 'data/all_pairs'
 
 	# Flag for refreshing the cache. 
-	cache_refresh = False
+	cache_refresh = True
 
 	# Number of classes to be created
 	K = 12
