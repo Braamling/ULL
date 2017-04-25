@@ -11,6 +11,7 @@ Jorn Peters & Bram van den Akker
   transferable**
 """
 from VNPairs import VNPairs
+from models.verbclass import VerbClassModel
 
 
 class Config():
@@ -35,7 +36,12 @@ def main():
     vnPairs = VNPairs(config)
 
     # Init the EM parameters
-    sigma, phi, lamb = vnPairs.init_parameters()
+    vnPairs.init_parameters()
+
+    model = VerbClassModel(vnPairs)
+    while True:
+        model.step()
+
 
 
 if __name__ == '__main__':

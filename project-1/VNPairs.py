@@ -37,6 +37,7 @@ class VNPairs():
 
     def store_cache(self):
         # Structure data
+        # TODO: save n_pairs, pair_verbs, pair_nouns, pair_freq
         storage = {
             "counts": [self.n_verbs, self.n_nouns, self.pairs],
             "mappings":
@@ -79,11 +80,27 @@ class VNPairs():
             # Store the counts of verbs
             self.n_verbs = len(self.id2verb)
             self.n_nouns = len(self.id2noun)
+            self.n_pairs = len(self.pairs)
+
+            # Create list of indices for all verbs and nouns in ith pair.
+            id2pairs = list(self.pairs.keys())
+            splits = [k.split(" ", 1) for k in id2pairs]
+            splits = [(self.verb2id[v], self.noun2id[n]) for v, n in splits]
+            pair_verbs, pair_nouns = zip(*splits)
+
+            self.pair_freq = np.array([self.pairs[k] for k in id2pairs])
+            self.M = self.pair_freq.sum()
+            print("M: ", self.M)
+            self.pair_verbs = np.array(pair_verbs)
+            self.pair_nouns = np.array(pair_nouns)
 
     def init_parameters(self):
         # Initialize the EM parameters
         self.sigma = np.random.rand(self.config.K)
         self.phi = np.random.rand(self.config.K, self.n_verbs)
         self.lamb = np.random.rand(self.config.K, self.n_nouns)
+        self.pc_vn = None
 
-        return self.sigma, self.phi, self.lamb
+        self.sigma = self.sigma / self.sigma.sum()
+        self.phi = self.phi / self.phi.sum(axis=0)
+        self.lamb = self.lamb / self.lamb.sum(axis=0)

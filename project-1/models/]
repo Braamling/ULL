@@ -1,0 +1,30 @@
+
+
+class VerbClassModel(object):
+
+    def __init__(self, vnpair):
+        self._vnpair = vnpair
+
+    def step(self):
+        self.estep()
+        self.mstep()
+
+    def estep(self):
+        self.update_pc_vn()
+
+    def update_pc_vn(self):
+        pass
+
+    def mstep(self):
+        self.update_sigma()
+        self.update_phi()
+        self.update_lambda()
+
+    def update_sigma(self):
+        pass
+
+    def update_phi(self):
+        pass
+
+    def update_lambda(self):
+        pass
