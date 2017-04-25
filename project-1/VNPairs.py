@@ -33,10 +33,10 @@ class VNPairs():
         # extract data
         self.n_verbs, self.n_nouns, self.pairs = storage["counts"]
         self.verb2id, self.id2verb, self.noun2id,\
-                self.id2noun = storage["mappings"]
+            self.id2noun = storage["mappings"]
 
     def store_cache(self):
-        # Structure data 
+        # Structure data
         storage = {
             "counts": [self.n_verbs, self.n_nouns, self.pairs],
             "mappings":

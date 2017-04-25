@@ -17,11 +17,11 @@ class Config():
     # location to store all pickle files
     storage = 'storage/vncounts'
 
-    # File containing all training data. 
+    # File containing all training data.
     # file should be of format: <verb> <noun> \n
     data = 'data/all_pairs'
 
-    # Flag for refreshing the cache. 
+    # Flag for refreshing the cache.
     cache_refresh = True
 
     # Number of classes to be created
