@@ -2,20 +2,21 @@
 Unsupervised Language Learning (ULL) 2017 - project 1
 
 ### VNPairs
-Verb noun pair helper class. This class is used for preprocessing the 
+Verb noun pair helper class. This class is used for preprocessing the
 verb noun pair data files and store/load the preprocessed data to disk
 
-### Authors  
+### Authors
 Jorn Peters & Bram van den Akker
 
-**Compatiable for both python2.7 and 3.0 but the pickle files are not transferable**
+**Compatiable for both python2.7 and 3.0 but the pickle files are not
+  transferable**
 """
 
 import numpy as np
 import pickle
 
-class VNPairs():
 
+class VNPairs():
     def __init__(self, config):
         self.config = config
 
@@ -27,19 +28,20 @@ class VNPairs():
             self.store_cache()
 
     def load_cache(self):
-        storage = pickle.load(open(self.config.storage, "rb" ))
+        storage = pickle.load(open(self.config.storage, "rb"))
 
         # extract data
         self.n_verbs, self.n_nouns, self.pairs = storage["counts"]
         self.verb2id, self.id2verb, self.noun2id,\
                 self.id2noun = storage["mappings"]
 
-
     def store_cache(self):
         # Structure data 
-        storage = {"counts": [self.n_verbs, self.n_nouns, self.pairs], 
-                   "mappings": [self.verb2id, self.id2verb,
-                                self.noun2id, self.id2noun]}
+        storage = {
+            "counts": [self.n_verbs, self.n_nouns, self.pairs],
+            "mappings":
+            [self.verb2id, self.id2verb, self.noun2id, self.id2noun]
+        }
 
         pickle.dump(storage, open(self.config.storage, "wb"))
 
@@ -80,8 +82,8 @@ class VNPairs():
 
     def init_parameters(self):
         # Initialize the EM parameters
-        self.sigma = np.random.rand(self.config.K) 
-        self.phi = np.random.rand(self.config.K, self.n_verbs) 
+        self.sigma = np.random.rand(self.config.K)
+        self.phi = np.random.rand(self.config.K, self.n_verbs)
         self.lamb = np.random.rand(self.config.K, self.n_nouns)
 
         return self.sigma, self.phi, self.lamb
