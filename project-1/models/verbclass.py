@@ -26,9 +26,12 @@ class WordIndex:
 
 
 class VerbClassModel:
-    def __init__(self, K):
+    def __init__(self, K, tol=1e-6, max_iter=10_000, verbose=True):
         self.K = K
         self._loglikelihood = [float('-inf')]
+        self.tol = tol
+        self.max_iter = max_iter
+        self.verbose = verbose
 
     def _initialize_distribution(self, shape, norm_axis=0):
         dist = (np.random.rand(*shape) + 1) / 2
@@ -60,19 +63,29 @@ class VerbClassModel:
     def fit(self, pairs):
         self._setup(pairs)
 
-        while True:
+        for i in range(self.max_iter):
+
             self.step()
+
+            ll_diff = self._loglikelihood[-1] - self._loglikelihood[-2]
+
+            if self.verbose:
+                print("[{}] LL diff: {} LL: {}".format(
+                    i, ll_diff, self._loglikelihood[-1]))
+
+            # Assert that loglikelihood does not decrease (We allow for a very
+            # small decrease which my happen due to numerical instabilities
+            # just before convergence).
+            assert ll_diff >= -1e-11, "Loglikelihood should never decrease"
+
+            # If update in Loglikelihood is smaller than tolerance, stop
+            # procedure.
+            if ll_diff < self.tol:
+                break
 
     def step(self):
         self.estep()
         self.mstep()
-
-        total_update = 456
-        ll_diff = self._loglikelihood[-1] - self._loglikelihood[-2]
-        assert ll_diff >= 0
-
-        print("ll diff: {} Total update: {}".format(ll_diff, total_update))
-        # assert ll_diff > -1e-1
 
     def estep(self):
         self.update_pc_vn()
@@ -91,32 +104,30 @@ class VerbClassModel:
 
     def mstep(self):
         self.update_sigma()
-        # self.update_phi()
-        # self.update_lambda()
+        self.update_phi()
+        self.update_lambda()
 
     def update_sigma(self):
         sigma_ = (self._pair_frequencies * self.pc_vn).sum(axis=1)
         sigma_ = sigma_ / self.M
         self.sigma = sigma_
 
-    # def update_phi(self):
-    #     pc_vn = self.vnpair.pc_vn
-    #     pair_freq = self.vnpair.pair_freq
-    #     new_phi = np.zeros((self.vnpair.config.K, self.vnpair.n_verbs))
-    #     for i, v in enumerate(self.vnpair.pair_verbs):
-    #         new_phi[:, v] += pair_freq[i] * pc_vn[:, i]
+    def update_phi(self):
+        pc_vn = self.pc_vn
+        pair_freq = self._pair_frequencies
+        new_phi = np.zeros((self.K, self.V))
+        for i, v in enumerate(self._pairs[:, 0]):
+            new_phi[:, v] += pair_freq[i] * pc_vn[:, i]
 
-    #     new_phi = new_phi / (self.vnpair.M * self.vnpair.sigma[:, None])
-    #     self.phi_diff = np.abs(self.vnpair.phi - new_phi).sum()
-    #     self.vnpair.phi = new_phi
+        new_phi = new_phi / (self.M * self.sigma[:, None])
+        self.phi = new_phi
 
-    # def update_lambda(self):
-    #     pc_vn = self.vnpair.pc_vn
-    #     pair_freq = self.vnpair.pair_freq
-    #     new_lamb = np.zeros((self.vnpair.config.K, self.vnpair.n_nouns))
-    #     for i, n in enumerate(self.vnpair.pair_nouns):
-    #         new_lamb[:, n] += pair_freq[i] * pc_vn[:, i]
+    def update_lambda(self):
+        pc_vn = self.pc_vn
+        pair_freq = self._pair_frequencies
+        new_lamb = np.zeros((self.K, self.N))
+        for i, n in enumerate(self._pairs[:, 1]):
+            new_lamb[:, n] += pair_freq[i] * pc_vn[:, i]
 
-    #     new_lamb = new_lamb / (self.vnpair.M * self.vnpair.sigma[:, None])
-    #     self.lamb_diff = np.abs(self.vnpair.lamb - new_lamb).sum()
-    #     self.vnpair.lamb = new_lamb
+        new_lamb = new_lamb / (self.M * self.sigma[:, None])
+        self.lamb = new_lamb

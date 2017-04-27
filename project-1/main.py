@@ -32,7 +32,7 @@ class Config():
     cache_refresh = True
 
     # Number of classes to be created
-    K = 3
+    K = 30
 
 
 def main():
@@ -44,7 +44,7 @@ def main():
     # Init the EM parameters
     vnPairs.init_parameters()
 
-    model = VerbClassModel(5)
+    model = VerbClassModel(config.K)
     model.fit(vnPairs.pairs)
 
 if __name__ == '__main__':
