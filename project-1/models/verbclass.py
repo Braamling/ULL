@@ -113,21 +113,19 @@ class VerbClassModel:
         self.sigma = sigma_
 
     def update_phi(self):
-        pc_vn = self.pc_vn
-        pair_freq = self._pair_frequencies
-        new_phi = np.zeros((self.K, self.V))
-        for i, v in enumerate(self._pairs[:, 0]):
-            new_phi[:, v] += pair_freq[i] * pc_vn[:, i]
+        new_phi = np.empty((self.K, self.V))
+        for i in range(self.K):
+            weights = self._pair_frequencies * self.pc_vn[i]
+            new_phi[i] = np.bincount(self._pairs[:, 0], weights=weights)
 
         new_phi = new_phi / (self.M * self.sigma[:, None])
         self.phi = new_phi
 
     def update_lambda(self):
-        pc_vn = self.pc_vn
-        pair_freq = self._pair_frequencies
-        new_lamb = np.zeros((self.K, self.N))
-        for i, n in enumerate(self._pairs[:, 1]):
-            new_lamb[:, n] += pair_freq[i] * pc_vn[:, i]
+        new_lamb = np.empty((self.K, self.N))
+        for i in range(self.K):
+            weights = self._pair_frequencies * self.pc_vn[i]
+            new_lamb[i] = np.bincount(self._pairs[:, 1], weights=weights)
 
         new_lamb = new_lamb / (self.M * self.sigma[:, None])
         self.lamb = new_lamb
