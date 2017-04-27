@@ -26,7 +26,7 @@ class Config():
     # File containing all training data.
     # file should be of format: <verb> <noun> \n
     data = 'data/all_pairs'
-    data = 'data/gold_deps.txt'
+    # data = 'data/gold_deps.txt'
 
     # Flag for refreshing the cache.
     cache_refresh = True

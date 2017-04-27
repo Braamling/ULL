@@ -28,9 +28,10 @@ class WordIndex:
 class VerbClassModel:
     def __init__(self, K):
         self.K = K
+        self._loglikelihood = [float('-inf')]
 
     def _initialize_distribution(self, shape, norm_axis=0):
-        dist = np.random.rand(*shape)
+        dist = (np.random.rand(*shape) + 1) / 2
         dist = dist / np.expand_dims(dist.sum(axis=norm_axis), norm_axis)
         return dist
 
@@ -67,19 +68,26 @@ class VerbClassModel:
         self.mstep()
 
         total_update = 456
-        ll_diff = 123
+        ll_diff = self._loglikelihood[-1] - self._loglikelihood[-2]
+        assert ll_diff >= 0
+
         print("ll diff: {} Total update: {}".format(ll_diff, total_update))
+        # assert ll_diff > -1e-1
 
     def estep(self):
         self.update_pc_vn()
 
     def update_pc_vn(self):
-        pc_vn_new = self.sigma[:, None]
-        pc_vn_new = pc_vn_new * self.phi[:, self._pairs[:, 0]]
-        pc_vn_new = pc_vn_new * self.lamb[:, self._pairs[:, 1]]
+        v_idx, n_idx = self._pairs.T
+        pc_vn_ = self.sigma[:, None] * self.phi[:, v_idx] * self.lamb[:, n_idx]
+        self.pc_vn = pc_vn_ / pc_vn_.sum(axis=0)
 
-        pc_vn_new = pc_vn_new / pc_vn_new.sum(axis=0)
-        self.pc_vn = pc_vn_new
+        # At this point we can cheaply compute the log likelihood of the data
+        # for the previous iteration (i.e., the LL obtained after the last
+        # M-step). Hence, we compute the LL here to avoid duplicate
+        # computation.
+        self._loglikelihood.append(np.sum(
+            self._pair_frequencies * np.log(pc_vn_.sum(axis=0))))
 
     def mstep(self):
         self.update_sigma()
@@ -87,10 +95,9 @@ class VerbClassModel:
         # self.update_lambda()
 
     def update_sigma(self):
-        sigma_new = np.sum(self.pc_vn * self._pair_frequencies, axis=1)
-        sigma_new = sigma_new / self.M
-
-        self.sigma = sigma_new
+        sigma_ = (self._pair_frequencies * self.pc_vn).sum(axis=1)
+        sigma_ = sigma_ / self.M
+        self.sigma = sigma_
 
     # def update_phi(self):
     #     pc_vn = self.vnpair.pc_vn
