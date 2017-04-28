@@ -115,13 +115,13 @@ class VerbClassModel:
         return sigma_
 
     def update_phi(self):
-        new_phi = np.empty((self.K, self.V))
+        phi_ = np.empty((self.K, self.V))
         for i in range(self.K):
             weights = self._pair_frequencies * self.pc_vn[i]
-            new_phi[i] = np.bincount(self._pairs[:, 0], weights=weights)
+            phi_[i] = np.bincount(self._pairs[:, 0], weights=weights)
 
-        new_phi = new_phi / (self.M * self.sigma[:, None])
-        return new_phi
+        phi_ = phi_ / (self.M * self.sigma[:, None])
+        return phi_
 
     def update_lambda(self):
         lamb_ = np.empty((self.K, self.N))
