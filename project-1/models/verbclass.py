@@ -88,29 +88,31 @@ class VerbClassModel:
         self.mstep()
 
     def estep(self):
-        self.update_pc_vn()
+        self.pc_vn = self.update_pc_vn(self._pairs)
 
-    def update_pc_vn(self):
-        v_idx, n_idx = self._pairs.T
+    def update_pc_vn(self, pairs, update_loglikelihood=True):
+        v_idx, n_idx = pairs.T
         pc_vn_ = self.sigma[:, None] * self.phi[:, v_idx] * self.lamb[:, n_idx]
-        self.pc_vn = pc_vn_ / pc_vn_.sum(axis=0)
 
         # At this point we can cheaply compute the log likelihood of the data
         # for the previous iteration (i.e., the LL obtained after the last
         # M-step). Hence, we compute the LL here to avoid duplicate
         # computation.
-        self._loglikelihood.append(np.sum(
-            self._pair_frequencies * np.log(pc_vn_.sum(axis=0))))
+        if update_loglikelihood:
+            self._loglikelihood.append(np.sum(
+                self._pair_frequencies * np.log(pc_vn_.sum(axis=0))))
+
+        return pc_vn_ / pc_vn_.sum(axis=0)
 
     def mstep(self):
-        self.update_sigma()
-        self.update_phi()
-        self.update_lambda()
+        self.sigma = self.update_sigma()
+        self.phi = self.update_phi()
+        self.lamb = self.update_lambda()
 
     def update_sigma(self):
         sigma_ = (self._pair_frequencies * self.pc_vn).sum(axis=1)
         sigma_ = sigma_ / self.M
-        self.sigma = sigma_
+        return sigma_
 
     def update_phi(self):
         new_phi = np.empty((self.K, self.V))
@@ -119,13 +121,13 @@ class VerbClassModel:
             new_phi[i] = np.bincount(self._pairs[:, 0], weights=weights)
 
         new_phi = new_phi / (self.M * self.sigma[:, None])
-        self.phi = new_phi
+        return new_phi
 
     def update_lambda(self):
-        new_lamb = np.empty((self.K, self.N))
+        lamb_ = np.empty((self.K, self.N))
         for i in range(self.K):
             weights = self._pair_frequencies * self.pc_vn[i]
-            new_lamb[i] = np.bincount(self._pairs[:, 1], weights=weights)
+            lamb_[i] = np.bincount(self._pairs[:, 1], weights=weights)
 
-        new_lamb = new_lamb / (self.M * self.sigma[:, None])
-        self.lamb = new_lamb
+        lamb_ = lamb_ / (self.M * self.sigma[:, None])
+        return lamb_
