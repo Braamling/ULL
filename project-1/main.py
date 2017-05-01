@@ -41,11 +41,15 @@ def main():
     # Init VNPairs containing all processed data from the data source
     vnPairs = VNPairs(config)
 
-    # Init the EM parameters
-    vnPairs.init_parameters()
+    samples = vnPairs.extract_testset(output_size=100)
 
-    model = VerbClassModel(config.K)
-    model.fit(vnPairs.pairs)
+    print(samples)
+
+    # Init the EM parameters
+    # vnPairs.init_parameters()
+
+    # model = VerbClassModel(config.K)
+    # model.fit(vnPairs.pairs)
 
 if __name__ == '__main__':
     main()
