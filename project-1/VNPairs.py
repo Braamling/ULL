@@ -27,10 +27,13 @@ class VNPairs():
             self.load_cache()
         else:
             self.preprocess_data()
+            self.extract_testset(config.output_size,
+                                 config.min_freq, config.max_freq)
             self.store_cache()
 
     def load_cache(self):
         storage = pickle.load(open(self.config.storage, "rb"))
+        self.samples = pickle.load(open(self.config.sample_storage, "rb"))
 
         # extract data
         self.n_verbs, self.n_nouns, self.pairs = storage["counts"]
@@ -47,6 +50,7 @@ class VNPairs():
         }
 
         pickle.dump(storage, open(self.config.storage, "wb"))
+        pickle.dump(self.samples, open(self.config.sample_storage, "wb"))
 
     def preprocess_data(self):
         self.pairs = {}
@@ -104,6 +108,9 @@ class VNPairs():
             self.pair_verbs = np.array(pair_verbs)
             self.pair_nouns = np.array(pair_nouns)
 
+    def get_samples(self):
+        return self.samples
+
     def extract_testset(self, output_size=3000, min_freq=30, max_freq=3000):
         # Sample 3000 unique pairs
         test_pairs = []
@@ -147,7 +154,7 @@ class VNPairs():
 
         self.update_pairs()
 
-        return test_pairs
+        self.samples = test_pairs
 
 
     def sample_verb(self, verb, noun):

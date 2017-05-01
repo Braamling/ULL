@@ -22,6 +22,7 @@ logging.basicConfig(level=logging.INFO)
 class Config():
     # location to store all pickle files
     storage = 'storage/vncounts'
+    sample_storage = 'storage/samples'
 
     # File containing all training data.
     # file should be of format: <verb> <noun> \n
@@ -29,7 +30,12 @@ class Config():
     # data = 'data/gold_deps.txt'
 
     # Flag for refreshing the cache.
-    cache_refresh = True
+    cache_refresh = False
+
+    # Set sample parameters
+    output_size = 100
+    min_freq = 30
+    max_freq = 3000
 
     # Number of classes to be created
     K = 30
@@ -41,9 +47,8 @@ def main():
     # Init VNPairs containing all processed data from the data source
     vnPairs = VNPairs(config)
 
-    samples = vnPairs.extract_testset(output_size=100)
-
-    print(samples)
+    # Retrieve samples
+    samples = vnPairs.get_samples()
 
     # Init the EM parameters
     # vnPairs.init_parameters()
