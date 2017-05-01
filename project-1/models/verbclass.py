@@ -131,3 +131,19 @@ class VerbClassModel:
 
         lamb_ = lamb_ / (self.M * self.sigma[:, None])
         return lamb_
+
+    def p_noun_given_verb(self, eval_pairs):
+        """
+        Parameters
+        ----------
+        pairs: list of 2-tuple
+        List of verb noun pairs, e.g., ("walk", "dog")
+        """
+        verbs, nouns = zip(*eval_pairs)
+        v_idx = np.array([self._verb_index[v] for v in verbs])
+        n_idx = np.array([self._noun_index[n] for n in nouns])
+        p_cvn = self.sigma[:, None] * self.phi[:, v_idx] * self.lamb[:, n_idx]
+        p_vn = p_cvn.sum(axis=0)
+        p_v = np.sum(self.sigma[:, None] * self.phi[:, v_idx], axis=0)
+        p_n_v = p_vn / p_v
+        return p_n_v
