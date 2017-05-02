@@ -39,7 +39,6 @@ class VerbClassModel:
         return dist
 
     def initialize_parameters(self):
-        logger.info('Initialize VerbClassModel parameters')
         self.sigma = self._initialize_distribution((self.K, ))
         self.phi = self._initialize_distribution((self.K, self.V), 1)
         self.lamb = self._initialize_distribution((self.K, self.N), 1)
