@@ -13,6 +13,7 @@ Jorn Peters & Bram van den Akker
 import logging
 
 from VNPairs import VNPairs
+from InVerbs import InVerbs
 from models.verbclass import VerbClassModel
 
 
@@ -40,15 +41,23 @@ class Config():
     # Number of classes to be created
     K = 30
 
+    # The amount of intrensic verbs to extract
+    ints_verb_count = 500
+
 
 def main():
     config = Config()
 
+    inverbs = InVerbs(config)
+
+    print(inverbs.get_verbs()[0]) 
+    # print()
+
     # Init VNPairs containing all processed data from the data source
-    vnPairs = VNPairs(config)
+    # vnPairs = VNPairs(config)
 
     # Retrieve samples
-    samples = vnPairs.get_samples()
+    # samples = vnPairs.get_samples()
 
     # Init the EM parameters
     # vnPairs.init_parameters()
