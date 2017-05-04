@@ -19,12 +19,18 @@ logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 def main(datafile, nclusters, nruns, max_iter):
 
     config = SimpleNamespace(storage='storage/vncounts',
+                             sample_storage='storage/samples',
                              data=datafile,
-                             cache_refresh=True)
+                             cache_refresh=False,
+                             output_size=100,
+                             min_freq=30,
+                             max_freq=3000)
+
     vnPairs = VNPairs(config)
     test_samples = vnPairs.extract_testset()
 
     n_test_samples = len(test_samples)
+    logging.info("Number of test samples: {}".format(n_test_samples))
     test_samples = list(chain(*[[(v, n), (v_, n)]
                                 for v, n, v_ in test_samples]))
 

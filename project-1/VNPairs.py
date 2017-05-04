@@ -155,6 +155,7 @@ class VNPairs():
         self.update_pairs()
 
         self.samples = test_pairs
+        return self.samples
 
 
     def sample_verb(self, verb, noun):
