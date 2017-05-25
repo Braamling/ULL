@@ -76,3 +76,59 @@ class H5PYDatasetCreator:
         if self._setup_done:
             self._file.flush()
             self._file.close()
+
+
+
+# import argparse
+
+# import numpy as np
+
+# from datasets import AstroData
+# from utils.dataset import H5PYDatasetCreator
+# import utils
+
+
+# def main(source, target):
+
+#     data = AstroData(source)
+#     creator = H5PYDatasetCreator(target)
+
+#     any_data = data.get_item()
+
+#     clean_shape = any_data.clean.shape
+
+#     N = 64
+#     num_examples = len(data)
+#     creator.add_split('train', num_examples)
+#     creator.add_source('clean', clean_shape, np.float32)
+#     creator.add_source('dirtyimage', clean_shape, np.float32)
+#     creator.add_source('dirtybeam', clean_shape, np.float32)
+
+#     mat = None
+#     invmat = None
+#     cur_array = None
+
+#     for i, datum in enumerate(data):
+#         print(i)
+#         # clean = datum.clean
+#         # clean  = (clean / 255).astype(np.float32)
+#         # vis, _ = datum.grid(fov_scale=4)
+#         # _, weight = datum.grid()
+#         # dirty = utils.uvtoimage(vis, crop=clean_shape).real.astype(np.float32)
+#         # creator.add_row('train', clean=clean, dirty=dirty, weight=weight)
+
+#         if cur_array != datum.array_id:
+#             u, v = datum.get('u', 'v')
+#             mat = utils.dftmat(u, v, datum.fov, N)
+#             u, v = np.hstack([u, -u]), np.hstack([v, -v])
+#             invmat = utils.dftmat(u, v, datum.fov, N, d=1)
+#             cur_array = datum.array_id
+
+#         clean = datum.clean / 255.0
+#         vis = mat @ clean.ravel()
+#         vis = np.hstack([vis, vis.conjugate()])
+#         dirty_image = (invmat @ vis).reshape(N, N).real
+#         dirty_beam = (invmat @ np.ones(vis.shape)).reshape(N, N).real
+
+#         creator.add_row(
+#             'train', clean=clean, dirtyimage=dirty_image, dirtybeam=dirty_beam)
