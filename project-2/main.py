@@ -13,6 +13,9 @@ Jorn Peters & Bram van den Akker
 import logging
 
 from DataModel import DataModel
+from collections import Counter
+import operator
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,9 +32,14 @@ def main():
     config = Config()
 
     dataModel = DataModel(config)
-    print("loaded")
-    print(dataModel.pairs[0])
-    print(dataModel.get_batch(size=1000))
+
+
+    # Note: only keep the top 29 relationships
+    # counts = Counter([r for v, n, r in dataModel.pairs])
+    # s_list = sorted(counts.items(), key=lambda x: -x[1])
+    # keep = s_list[:29]
+
+    print(dataModel.get_batch(size=10000))
 
 
 
