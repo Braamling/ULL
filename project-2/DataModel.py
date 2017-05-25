@@ -123,6 +123,10 @@ class DataModel():
         train_data = zip(self.train_verb_vecs, self.train_noun_vecs,
                          self.train_rel_hots, range(len(self.train_rel_hots)))
 
+        # Dump the train and test pairs
+        pickle.dump(self.test_pairs, open(self.config.test_pairs, 'wb'))
+        pickle.dump(self.train_pairs, open(self.config.train_pairs, 'wb'))
+
         for i, (verb_vec, noun_vec, rel_hot, idx) in enumerate(train_data):
             # print(verb_vec, noun_vec, rel_hot, idx)
             if i % 1000 == 0 and i > 0:

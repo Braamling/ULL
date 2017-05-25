@@ -12,7 +12,8 @@ Jorn Peters & Bram van den Akker
 """
 import logging
 
-from DataModel import DataModel
+# from DataModel import DataModel
+from EvaluateModel import EvaluateModel
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,6 +24,8 @@ class Config():
     id2word = "storage/id2word.p"
     id2vector = "storage/id2vector.p"
     id2rel = "storage/id2rel.p"
+    train_pairs = "storage/train_pairs"
+    test_pairs = "storage/test_pairs"
 
     # The shape of each vector in the word2vec model
     vec_shape = (300,)
@@ -37,15 +40,15 @@ def main():
     dataModel = DataModel(config)
     
     dataModel.split_test_train()
-    print('van de een anar de ander')
+
     dataModel.store_H5PY()
-    # Note: only keep the top 29 relationships
-    # counts = Counter([r for v, n, r in dataModel.pairs])
-    # s_list = sorted(counts.items(), key=lambda x: -x[1])
-    # keep = s_list[:29]
+    
+    # evaluateModel = EvaluateModel(config)
 
-    # print(dataModel.get_batch(size=10000))
-
+    # verbs, nouns, rels = evaluateModel.convert_pairs_to_vectors(evaluateModel.test_pairs)
+    # print(verbs.shape)
+    # print(nouns.shape)
+    # print(rels.shape)
 
 
 if __name__ == '__main__':
