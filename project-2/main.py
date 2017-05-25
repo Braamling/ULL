@@ -13,9 +13,6 @@ Jorn Peters & Bram van den Akker
 import logging
 
 from DataModel import DataModel
-from collections import Counter
-import operator
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,19 +24,26 @@ class Config():
     id2vector = "storage/id2vector.p"
     id2rel = "storage/id2rel.p"
 
+    # The shape of each vector in the word2vec model
+    vec_shape = (1, 300)
+
+    # Keep the N most frequent relationships and discard the rest
+    rel_cutoff = 29
+
 
 def main():
     config = Config()
 
     dataModel = DataModel(config)
-
-
+    
+    dataModel.split_test_train()
+    dataModel.store_H5PY()
     # Note: only keep the top 29 relationships
     # counts = Counter([r for v, n, r in dataModel.pairs])
     # s_list = sorted(counts.items(), key=lambda x: -x[1])
     # keep = s_list[:29]
 
-    print(dataModel.get_batch(size=10000))
+    # print(dataModel.get_batch(size=10000))
 
 
 
