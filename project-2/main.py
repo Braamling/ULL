@@ -25,7 +25,7 @@ class Config():
     id2rel = "storage/id2rel.p"
 
     # The shape of each vector in the word2vec model
-    vec_shape = (1, 300)
+    vec_shape = (300,)
 
     # Keep the N most frequent relationships and discard the rest
     rel_cutoff = 29
@@ -37,6 +37,7 @@ def main():
     dataModel = DataModel(config)
     
     dataModel.split_test_train()
+    print('van de een anar de ander')
     dataModel.store_H5PY()
     # Note: only keep the top 29 relationships
     # counts = Counter([r for v, n, r in dataModel.pairs])

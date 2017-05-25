@@ -15,7 +15,7 @@ import random
 
 import numpy as np
 
-# from utils import H5PYDatasetCreator
+from utils import H5PYDatasetCreator
 from collections import Counter
 
 class DataModel():
@@ -110,21 +110,23 @@ class DataModel():
         # Create all the datasets and split train/test
         self.prepare_for_hsf5()
 
-        creator = H5PYDatasetCreator(target)
+        creator = H5PYDatasetCreator('/home/jorn/Desktop/outfile.test')
 
-        creator.add_split('train', num_examples)
-        creator.add_split('test', num_examples)
+        creator.add_split('train', len(self.train_rel_hots))
+        creator.add_split('test', len(self.test_rel_hots))
         creator.add_source('noun_vec', self.config.vec_shape, np.float32)
         creator.add_source('verb_vec', self.config.vec_shape, np.float32)
-        creator.add_source('rel', (1, len(self.id2rel)), np.float32)
-        creator.add_source('idx', 1, np.int)
+        creator.add_source('rel', (self.config.rel_cutoff,), np.float32)
+        creator.add_source('idx', (1,), np.int)
 
         # Add the train data to H5PY
         train_data = zip(self.train_verb_vecs, self.train_noun_vecs,
                          self.train_rel_hots, range(len(self.train_rel_hots)))
 
-        for verb_vec, noun_vec, rel_hot, idx in train_data:
+        for i, (verb_vec, noun_vec, rel_hot, idx) in enumerate(train_data):
             # print(verb_vec, noun_vec, rel_hot, idx)
+            if i % 1000 == 0 and i > 0:
+                print(i)
             creator.add_row(
                 'train', verb_vec=verb_vec, noun_vec=noun_vec, rel=rel_hot, idx=idx)
 
@@ -137,3 +139,4 @@ class DataModel():
             creator.add_row(
                 'test', verb_vec=verb_vec, noun_vec=noun_vec, rel=rel_hot, idx=idx)
 
+        creator.close()
