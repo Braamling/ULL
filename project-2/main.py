@@ -29,8 +29,9 @@ def main():
     config = Config()
 
     dataModel = DataModel(config)
-
-    dataModel.get_batch(size=100000)
+    print("loaded")
+    print(dataModel.pairs[0])
+    print(dataModel.get_batch(size=1000))
 
 
 

@@ -16,10 +16,10 @@ class DataModel():
     def __init__(self, config):
         self.config = config
 
-        self.pairs = pickle.load(open(self.config.pairs))
-        self.id2word = pickle.load(open(self.config.id2word))
-        self.id2vector = pickle.load(open(self.config.id2vector))
-        self.id2rel = pickle.load(open(self.config.id2rel))
+        self.pairs = pickle.load(open(self.config.pairs, 'rb'))
+        self.id2word = pickle.load(open(self.config.id2word, 'rb'))
+        self.id2vector = pickle.load(open(self.config.id2vector, 'rb'))
+        self.id2rel = pickle.load(open(self.config.id2rel, 'rb'))
 
         self.batch_pointer = 0
 
