@@ -27,16 +27,16 @@ in~\cite{rooth1999inducing} is reproduced. Specifically, a model for
 slot annotations and sub-categorizations are presented and
 evaluated. Both models are inferred using Expectation Maximization
 using data obtained from parsing the Penn Tree Bank and British News
-corpora. An analysis of the obtained model is given.}
+corpora. An analysis of the obtained model is given. }
 
 \section{Introduction} % Bram
-This study covers two different methods slot annotation and
-sub-categorization on annotated data. The first part is a reprodction of the work presented in~\cite{rooth1999inducing}, where both a slot annotation and
+Finding the relation between verbs and their arguments is a classic problem in lexical semantics. In 1993, Levin \cite{levin1993english} argued that semantically coherent classes could be created by examining their context which can then be used to disambiguate the verbs. According to \cite{lapata2004verb}, these classes have various limitations for use in computational models. In their study, they create a simple statistical model for verb class ambiguity extending Levin's classes. This study covers two methods for slot annotation and
+sub-categorization on annotated data. The first part is a reproduction of the work presented in~\cite{rooth1999inducing}, where both a slot annotation and
 sub-categorization are induced using the
-Expectation Maximization~\cite{dempster1977maximum} (EM). More specifically, a latent clustering model is used do infer
-Parser~\cite{klein2003accurate}. The second part of the paper describes an alternative method for sub-categorization that uses Variational Autoencodes (VAE) with the word embeddings creating from the verbs and nouns. The rest of this paper is as follows:
+Expectation Maximization~\cite{dempster1977maximum} (EM). More specifically, a latent clustering model is used to infer
+Parser~\cite{klein2003accurate}. The second part of the paper describes an alternative method for sub-categorization that uses Variational Autoencoders (VAE) with the word embeddings creating from the verbs and nouns. The rest of this paper is as follows:
 clusters for verb-noun pairs that were extracted using the Stanford
-In section two the clustering approach is prestented, in Section 2.1
+In section two the clustering approach is presented, in Section 2.1
 and 2.2 the two models are described. Section 3 the evaluation method
 is outlined, results are discussed in Section 4 and a conclusion is
 given in Section 5. % Laatste gedeelte nodig? Of was het gewoon om tekst te vullen? 
@@ -44,7 +44,7 @@ given in Section 5. % Laatste gedeelte nodig? Of was het gewoon om tekst te vull
 \section{EM Clustering} % Jorn
 Following~\cite{rooth1999inducing}
 Expectation-Maximization~\cite{dempster1977maximum} (EM) is used to
-infer latent classes of verb-noun pairs. The verb-noun pairs are
+infer latent classes of verb-noun pairs consisting of a verb head, grammatical relation and noun filler head. The verb-noun pairs are
 extracted from the Penn Tree Bank (PTB) and British News (BTC) corpora
 using the Stanford parser\footnote{The extracted verb-noun pairs were
 provided as part of the Unsupervised Language Learning course at the
@@ -128,9 +128,8 @@ considered.}
 \subsection{Slot Annotation Model} % Jorn
 \label{sec:verbclasses}
 In this section a model is presented that induces a distribution of
-latent clusters for each verb-noun pair. This clusters can be
-interpreted as slot annotations. Moreover, for each cluster/slot
-annotation a distribution over verbs and a distribution of nouns. The
+latent clusters for each verb-noun pair. These clusters can be
+used for the induction of slot annotations. Moreover, for each cluster a distribution over verbs and a distribution of nouns. The
 model is defined as follows:
 \begin{align*}
   p(\mathcal{Y})
@@ -238,7 +237,7 @@ approximately 75 compared to approximately 35\footnote{approximately,
 since the model was not run for all number of clusters.}. Moreover,
 the best accuracy obtained in the present study is lower than that
 obtained by~\cite{rooth1999inducing}. These differences can be
-explained by the fact that for the present study a more advances
+explained by the fact that for the present study a more advanced
 parser was used to extract the pairs. Although this does not
 necessarily make the tasks harder, it is possible that the current
 parser is better at extracting harder pairs. However, a definitive
@@ -358,15 +357,14 @@ one & 0.001      & prices & 0.001 \\
 \label{table:topnoun}
 \end{table}
 
-\section{Changing to VAE}
-In order to use the verb-noun pairs as an input for the VAE, the data first had to be converted to a vector input. Both the verb and noun were converted to a pretrained word2vec\cite{mikolov2013efficient} word embedding trained on the Google News Dataset and then concatenated. Pairs that contained words not in the pre-trained model, were discarded from the dataset used for the VAE. To relationships between the verbs and nouns were represented as a one-hot encoded vector. To increase the reliability of learned model, we discarded all relations that were present in less than 2000 pairs, leaving 29 from the 324 different relations. From the 2,002,378 pairs in the original dataset, 1,818,740 were usable as an input for the VAE.  
+\section{Changing to VAE} % TODO change this title
+In order to use the verb-noun pairs as an input for the VAE, the data first had to be converted to a vector input. Both the verb and noun from each pair are converted to a pretrained word2vec\cite{mikolov2013efficient} word embedding trained on the Google News Dataset\footnote{https://code.google.com/archive/p/word2vec/} and then concatenated. Pairs that contained words not in the pretrained model, were discarded from the dataset used for the VAE. To relationships between the verbs and nouns were represented as a one-hot encoded vector. To increase the reliability of learned model, we discarded all relations that were present in less than 2000 pairs, leaving 29 from the 324 different relations. From the 2,002,378 pairs in the original dataset, 1,818,740 were usable as an input for the VAE.  
 % Convert verbs and nouns to word embeddings from google (word2vec ref / google )
 
 % Relations with multihot
 
 % Baseline by comparing the wordvector representation with t-sne
 
-%TODO fix references
 % Maybe start a new chapter here?
 To visualize the clusters, each of the pair vector representations in the test set were plotted using t-sne and colored with their corresponding cluster. The exact same train and test set were used to train both the EM and VAE models. The results are shown in figure \fig{TODOFIXFIGURE}
 
