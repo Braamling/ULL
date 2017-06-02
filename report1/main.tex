@@ -1,5 +1,5 @@
 \documentclass[11pt]{scrartcl}
-\usepackage[utf8]{inputenc}
+% \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
 \usepackage{graphicx}
@@ -15,6 +15,10 @@
 \newcommand{\thetaold}{\theta^{t}}
 \newcommand{\Cat}{\text{Cat}}
 
+\newcommand{\bx}{\boldsymbol{x}}
+\newcommand{\bz}{\boldsymbol{z}}
+\newcommand{\bw}{\boldsymbol{w}}
+
 \title{Unsupervised Lexicon Annotation using Expectation Maximization} 
 \author{Jorn Peters\\\small{jornpeters@gmail.com} \and Bram van den Akker\\\small{contact@bramvandenakker.nl}}
 
@@ -27,19 +31,28 @@ in~\cite{rooth1999inducing} is reproduced. Specifically, a model for
 slot annotations and sub-categorizations are presented and
 evaluated. Both models are inferred using Expectation Maximization
 using data obtained from parsing the Penn Tree Bank and British News
-corpora. An analysis of the obtained model is given. }
+corpora. An analysis of the obtained model is given. Moreover, three
+methods (word vector clustering and two VAE approaches) are to perform
+similar tasks are presented.}
 
 \section{Introduction} % Bram
-Finding the relation between verbs and their arguments is a classic problem in lexical semantics. In 1993, Levin \cite{levin1993english} argued that semantically coherent classes could be created by examining their context which can then be used to disambiguate the verbs. According to \cite{lapata2004verb}, these classes have various limitations for use in computational models. In their study, they create a simple statistical model for verb class ambiguity extending Levin's classes. This study covers two methods for slot annotation and
-sub-categorization on annotated data. The first part is a reproduction of the work presented in~\cite{rooth1999inducing}, where both a slot annotation and
-sub-categorization are induced using the
-Expectation Maximization~\cite{dempster1977maximum} (EM). More specifically, a latent clustering model is used to infer
-Parser~\cite{klein2003accurate}. The second part of the paper describes an alternative method for sub-categorization that uses Variational Autoencoders (VAE) with the word embeddings creating from the verbs and nouns. The rest of this paper is as follows:
-clusters for verb-noun pairs that were extracted using the Stanford
-In section two the clustering approach is presented, in Section 2.1
-and 2.2 the two models are described. Section 3 the evaluation method
-is outlined, results are discussed in Section 4 and a conclusion is
-given in Section 5. % Laatste gedeelte nodig? Of was het gewoon om tekst te vullen? 
+Finding the relation between verbs and their arguments is a classic
+problem in lexical semantics. In 1993, Levin \cite{levin1993english}
+argued that semantically coherent classes could be created by
+examining their context which can then be used to disambiguate the
+verbs. According to \cite{lapata2004verb}, these classes have various
+limitations for use in computational models. In their study, they
+create a simple statistical model for verb class ambiguity extending
+Levin's classes. This study covers two methods for slot annotation and
+sub-categorization on annotated data. The first part is a reproduction
+of the work presented in~\cite{rooth1999inducing}, where both a slot
+annotation and sub-categorization are induced using the Expectation
+Maximization~\cite{dempster1977maximum} (EM). More specifically, a
+latent clustering model is used to infer
+Parser~\cite{klein2003accurate}. The second part of the paper
+describes an alternative method for sub-categorization that uses
+Variational Autoencoders (VAE) with the word embeddings creating from
+the verbs and nouns.
 
 \section{EM Clustering} % Jorn
 Following~\cite{rooth1999inducing}
@@ -118,7 +131,7 @@ model for deducing sub-categorizations is presented.
 
 \end{tikzpicture}
 \caption{Graphical model of clustering model. $N$ denotes the total
-number of pairs in teh dataset. $c_n$, $v_n$, and $n_n$ denote the
+number of pairs in the dataset. $c_n$, $v_n$, and $n_n$ denote the
 $n$th class, verb and noun, respectively. In total $K$ classes are
 considered.}
 \label{fig:graphmodel}
@@ -202,7 +215,7 @@ appendix.
 \section{EM Evaluation} % Jorn
 The slot annotation model is evaluated using an evaluation scheme
 devised in~\cite{rooth1999inducing}. The sub-categorization model is
-evaluation by inspection. That is, the high probability nouns for each
+evaluated by inspection. That is, the high probability nouns for each
 cluster are inspected, it is then expected that for each cluster the
 high probability nouns are similar, \ie, can be used in similar
 situations.
@@ -236,12 +249,7 @@ of clusters for which the best result is obtained is higher, \ie,
 approximately 75 compared to approximately 35\footnote{approximately,
 since the model was not run for all number of clusters.}. Moreover,
 the best accuracy obtained in the present study is lower than that
-obtained by~\cite{rooth1999inducing}. These differences can be
-explained by the fact that for the present study a more advanced
-parser was used to extract the pairs. Although this does not
-necessarily make the tasks harder, it is possible that the current
-parser is better at extracting harder pairs. However, a definitive
-statement on this needs more work.
+obtained by~\cite{rooth1999inducing}. 
 
 \begin{figure}
 \includegraphics[width=\textwidth]{slotresults.pdf}
@@ -357,8 +365,286 @@ one & 0.001      & prices & 0.001 \\
 \label{table:topnoun}
 \end{table}
 
-\section{Changing to VAE} % TODO change this title
-In order to use the verb-noun pairs as an input for the VAE, the data first had to be converted to a vector input. Both the verb and noun from each pair are converted to a pretrained word2vec\cite{mikolov2013efficient} word embedding trained on the Google News Dataset\footnote{https://code.google.com/archive/p/word2vec/} and then concatenated. Pairs that contained words not in the pretrained model, were discarded from the dataset used for the VAE. To relationships between the verbs and nouns were represented as a one-hot encoded vector. To increase the reliability of learned model, we discarded all relations that were present in less than 2000 pairs, leaving 29 from the 324 different relations. From the 2,002,378 pairs in the original dataset, 1,818,740 were usable as an input for the VAE.  
+\section{Word Vector based Clustering} % TODO change this title
+In the previous sections an EM-based model that uses only the identity
+of verbs and nouns was explored. In this section, instaed of only
+using the identity, word vectors are used. Word vectors, made popular
+by Mikolov et al.~\cite{mikolov2013efficient} are vector
+representations of words that capture the semantic meaning of words,
+\ie, if two words are similar, for example, \textit{car} and
+\textit{automobile}, there word vector representation should also be
+similar. Hence, by using word vectors as representations of words
+instead of simple identities, the models can leverage the semantic
+representation of words to construct clusters. In this section, two
+techniques using word vectors are explored. First, a mixture of Von
+Mises-Fisher Distributions is fit to a training set to obtain
+clusters. These clusters are evaluated using the same experiment as
+the slot annotation model, \ie, the \textit{relatedness} of verb-noun
+pairs observed in the data (and selected for the test set) should be
+higher than that of a random verb and the same noun. More details on this
+model are given in Section~\ref{sec:vmf}
+
+The second model explores in this section is a Variation Autoencoder
+(VAE)~\cite{kingma2013auto, rezende2014stochastic}. The VAE is a
+probabilistic model that models the data (word vectors) as a
+stochastic non-linear transformation of some factor of variations
+represented by a vector $\boldsymbol{z} \sim
+p(\boldsymbol{z})$. Specifically, the VAE learns both a generative
+model $p(\bx|\bz)$ and a recognition model $p(\bz|\bx)$. The VAE
+resembles an AutoEncoder and we can think of the variable $\bz$ as a
+stochastic encoding of $\bx$. In this study, two approaches are used
+for clustering used a VAE\@. First a VAE is trained with a Gaussian
+encoding distribution and a Gaussian output distribution. Clusters are
+then obtained by fitting a Von Mises-Fisher distribution to the
+expected values of the encodings. Secondly, the Gumbel-Softmax
+reparameterization trick~\cite{jang2016categorical,
+maddison2016concrete} is used to enforce a discrete distribution on
+the encoding layer. This way the distribution over clusters is learned
+directly. More details on the VAE approach are given in
+Section~\ref{sec:vmf}.
+
+For the remainder of the experiments discussed in this report,
+pre-trained word vectors trained on Google News are used. These word
+vectors are trained on a three billion word news article corpus and
+contains over three million words. The same data set as for the EM
+model experiments is used for the following experiments. The main
+difference being that word pairs for which no word vector was
+available for either the verb or noun were discarded.  This resulted
+in 1,818,740 (non-unique) word pairs.
+
+\subsection{Von Mises-Fisher Cluster Model}
+\label{sec:vmf}
+The Von Mises-Fischer (VMF) distribution~\cite{mardia2009directional}
+can be thought of as a Normal distribution on the surface of a
+$(p-1)$D hypersphere in $\mathbb{R}^p$. It is a distribution over unit
+vectors (or the direction of vectors), i.e., vectors that have a
+direction similar to the cluster mean have high probability under a
+VMF distribution. Hence, it is similar to computing cosine distances,
+but has a statistical basis. Moreover, when using a VMF distribution soft
+assignment can be used, similar to a mixture of Gaussian
+distributions. Using a mixture of VMF distributions makes more sense
+than using a more common Mixture of Gaussian distributions because
+distance in word vectors is often computed using cosine distance.
+
+In order to compute clusters over word the following procedure is
+used.  For each verb-noun pair the verb $\bw_{v,i}$ and noun $\bw_{n,
+i}$ word vectors are concatenated into a single pair vector $\bw_i =
+[\bw_{v,i}, \bw_{n,i}]$. On these pair vectors a VMF mixture is
+fitted. However, since the computational cost of this mixture is
+extensive, the model was fitted on a subset of $50,000$ pair vectors
+which were sampled according to a frequency distribution. Although
+this is a severe limitation on the model, since this is a preliminary
+study, we can still learn from the results obtained.
+
+The software used to fit the VMF mixture does not allow to compute the
+probability of a pair vector given a cluster. Moreover, we are
+interested in $p(n|v)$ where $n$ is a noun in a pair and $v$ is a
+verb. The used software does provide a distance (similar to cosine
+distance) for a pair vector and each cluster center. When normalized,
+these can be interpreted as the probability $p(v, n| c)$, \ie, the
+probability that the pair $(v, n)$ belongs to clusters $c$. Moreover,
+the probability $p(c)$ of clusters $c$ can easily be computed using the
+cluster assignments. Then
+\begin{align*}
+  p(v, n) &= \sum_c p(v, n|c)p(c) \\
+  p(v) &= \sum_{n'} p(v, n') = \sum_{n'} \sum_{c} p(v, n'|c)p(c) \\
+  p(n|v) &= \frac{p(v, n)}{p(v)} = \frac{\sum_c p(v, n|c)p(c)}{\sum_{n'} \sum_{c} p(v, n'|c)p(c)},
+ \end{align*}
+ where the sum over $n'$ represents a sum over all nouns in the
+training set used for fitting the VMF mixture. Given this equation,
+and a test set containing of triples $(v, n, v')$ where $(v, n)$ is
+verb-noun pair removed from the training set and $(v', n)$ is a
+verb-noun pair that never occurs in the training set. Using this test
+set the accuracy of the model is computed, where accuracy is defined
+as the percentage of triples for which
+\[
+  p(n|v) \ge p(n|v').
+\]
+This resulted in an accuracy of $58\%$, which is only slightly above
+the result of $50\%$ for a random model. This can be explained by
+looking at the T-SNE plot shown in Figure~\ref{tsnevmf}. In this
+figure a T-SNE embedding~\cite{maaten2008visualizing} of the pair
+vectors in the test set is depicted.  The colors represent the
+clusters assigned by the VMF mixture model. The clustering was
+performed for multiple number of clusters, but no difference in result
+was observed. In Figure~\ref{tsnevmf} 35 clusters are used.  From this
+figure we clearly see that there is very little structure in the test
+data. There is only a single clear cluster (labeled 1), which is a
+cluster containing verb-noun pairs such as: `resist debbie',
+`wondering norwich', `blinked maggie', `suggests john', and `cry
+victoria', \ie, pairs containing nouns referring to people. Since
+there is very little structure in the pair vectors, it is expected
+that a clustering method will not do well as it does not change the
+pair vector representation but only imposes a clustering on top of the
+unstructured representations.
+
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{tsne_test_vmf.pdf}
+\caption{T-SNE of test set, colors represent inferred clusters}
+\label{tsnevmf}
+\end{figure}
+
+
+\subsection{Variational Auto Encoder}
+\label{sec:vae}
+In the previous section it was observed that the pre-trained word
+vector representations are not very suitable for pair clustering. A
+disadvantage of the clustering approach is that it does not alter the
+vector representations.  In this section VAEs are used which can alter
+the representation of the vectors at the embedding layer, which is
+used for clustering.  VAEs are probabilistic models which model the
+data as a non-linear combination of factors of variation. To some
+degree, one can think of VAEs as a non-linear generalization of Factor
+Analysis or Probabilistic PCA. The graphical model for the VAE used
+here is depicted in Figure~\ref{fig:graphmodelvae}. Using the VAE both
+the stochastic mapping from $z$ to $v$ and $n$ ($p(v, n| z)$), as the
+mapping from $(v, n)$ to $z$ ($p(z|v, n)$) is learned. These mappings
+are represented as Neural Networks which output the parameters of a
+distribution. Here two approaches to training a VAE for clustering are
+used, \ie, we use either a Categorical distribution for the encoding
+$z$ or a Gaussian distribution. For the output pair a Gaussian
+distribution is used in both cases, that is,
+\[
+  p(v, n| z) = \mathcal{N}\left(
+  \begin{bmatrix} v \\ n \end{bmatrix} {\Big|}
+  \begin{bmatrix} \mu_v(z) \\ \mu_n(z) \end{bmatrix},
+  \begin{bmatrix} \Sigma_v(z) & 0 \\
+    0 & \Sigma_n(z) \end{bmatrix}
+  \right)
+\]
+where $\mu(z)$ and $\Sigma(z)$ both are non-linear functions
+represented by neural networks. For the Gaussian encoding VAE a
+standard VAE as presented in~\cite{kingma2013auto,
+rezende2014stochastic} is used. For the Categorical VAE the
+Gumbel-Softmax trick as presented in~\cite{jang2016categorical,
+maddison2016concrete}. Simply put, the Gumbel-Softmax trick
+approximates the sampling from a discrete distribution while still
+being differential, \ie, the never can still be trained using back
+propagation and some form of gradient ascent. The Variational
+AutoEncoder is evaluated using the same experiment as used for the VMF
+mixture evaluation. For both VAEs the probability of the clusters (called $z$ here)
+is known upfront, that is,
+\begin{align*}
+  p(z) &= \mathcal{N}(z | 0, I) \qquad \text{(Gaussian VAE)} \\
+  p(z) &= U(K) \qquad \text{(Categorical VAE)}.
+\end{align*}
+Hence, the probability of a noun given a verb is computed using
+\begin{align*}
+  p(n. v) &= \int p(n, v| z) p(z) dz \\
+  p(v) &= \iint p(v, n | z) p(z) dn dz \\
+  p(n|v) &= \frac{p(n, v)}{p(v)} = \frac{\int p(n, v| z) p(z) dz}{\iint p(v, n | z) p(z) dn dz},
+ \end{align*}
+where the integral over $z$ turns into a sum for the Categorical
+VAE\@. All integrals can be approximated using Monte Carlo integration,
+resulting in the following expression for the probability of a noun given a verb:
+\begin{align*}
+  p(n|v) &= \frac{\frac{1}{L} \sum_{l=1}^L p(n, v| z) p(z^{(l)})}{\frac{1}{J} \sum_{j=1}^J p(v, n^{(j)} | z) p(z^{(j)})}
+\end{align*}
+for $z^{(j)}, z^{(l)} \sim p(z)$, and $n^{(j)} \sim p(n | z) = \mathcal{N}(n| \mu_n(z), \Sigma_n(z))$. However,
+since $p(v, n| z)$ for a random $z$ for the Gaussian VAE has very low
+probability resulting in numarical unsuitability, for the present
+study, $p(n|v)$ is computed by fitting a VMF mixture on the obtained
+encoding.  Both VAEs were trained on the complete training set.
+
+\subsubsection{Categorical Variational AutoEncoder}
+The Categorical VAE was trained until convergence as measured on a
+hold-out validation set. The training converged within a single epoch,
+however, the first epoch was completed to ensure that the VAE has seen
+all pairs in the training set. The distribution of classes obtained on
+the test set after training is depicted in Figure~\ref{dist}. This
+figure clearly shows that the categorical VAE does not learn an
+interesting clustering over the verb noun pairs. Due to this results
+no evaluation was performed using the categorical VAE.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\textwidth]{dist.pdf}
+  \caption{Distribution of clusters on test set of training Categorical VAE for one epoch.}
+  \label{dist}
+ \end{figure}
+
+The results obtained using the categorical VAE may be explained by the
+chosen output distribution. In the previous section it was already
+discussed that there is only limited structure when word vectors are
+combined into pair vectors. When using a categorical VAE, the encoding
+layers deterministically maps to an output distribution. Since there
+is only limited structure, the best the VAE can do is to cover the
+full space using a single output distribution, \ie, if it would map to
+multiple smaller Gaussian distributions the cost (in terms of loss) of
+\textit{selecting} the incorrect cluster of the embedding is very
+high. This may be addressed by using an output distribution with
+heavier tails such as a Laplace distribution, a Student's
+t-distribution, or a Categorical distribution over the words observed
+in the corpus.
+
+\subsubsection{Gaussian Variational AutoEncoder}
+For the Gaussian VAE the embedding vectors are extracted, \ie, the
+mean of the Gaussian encoding distribution is used as new pair
+representation vector. From the train set, 50.000 pairs are sampled
+according to a frequency distribution. A VMF mixture if fitted to this
+subset of the training set. The results for this experiment for two different
+embedding sizes is presented in the table below.
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Embedding Size & 35D    & 100D \\ \midrule
+Accuracy       & 0.3623 & 0.346    \\ \bottomrule
+\end{tabular}
+\end{center}
+
+As shown in the table above, the accuracy obtained using the Gaussian
+VAE are drammatically worse than those obtained using the VMF mixture
+on word vectors. This is most likely the result of
+over-fitting. Although a validation set was used, the test set was
+sampled such that no word (verb or noun) occurs more than 3.000 times
+in the training set. However, there are many words in the training and
+validation set that occur more often. Hence, the validation did not
+show the same problem.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+
+  % Define nodes
+  \node[latent] (cn) {$z_n$};
+  \node[obs, below right=of cn] (vn) {$v_n$};
+  \node[obs, below left=of cn] (nn) {$n_n$};
+  % \node[latent, above=of y, xshift=-1.2cm] (w) {$\mathbf{w}$};
+  % \node[latent, above=of y, xshift=1.2cm]  (x) {$\mathbf{x}$};
+  % \node[latent, right=2cm of y]            (t) {$\tau$};
+
+  % Connect the nodes
+  \edge {cn} {vn, nn} ; 
+
+  % Plates
+  \plate {yx} {(cn)(vn)(nn)} {$N$} ;
+  % \plate {} {(w)(y)(yx.north west)(yx.south west)} {$M$} ;
+
+\end{tikzpicture}
+\caption{Graphical model of VAE. $N$ denotes the total
+number of pairs in the dataset. $z_n$, $v_n$, and $n_n$ denote the
+$n$th class, verb and noun, respectively.}
+\label{fig:graphmodelvae}
+\end{figure}
+
+
+% In order to use the verb-noun pairs as an input for the VAE, the data
+% first had to be converted to a vector input. Both the verb and noun
+% from each pair are converted to a pretrained
+% word2vec\cite{mikolov2013efficient} word embedding trained on the
+% Google News
+% Dataset\footnote{https://code.google.com/archive/p/word2vec/} and then
+% concatenated. Pairs that contained words not in the pretrained model,
+% were discarded from the dataset used for the VAE. To relationships
+% between the verbs and nouns were represented as a one-hot encoded
+% vector. To increase the reliability of learned model, we discarded all
+% relations that were present in less than 2000 pairs, leaving 29 from
+% the 324 different relations. From the 2,002,378 pairs in the original
+% dataset, 1,818,740 were usable as an input for the VAE.
+
 % Convert verbs and nouns to word embeddings from google (word2vec ref / google )
 
 % Relations with multihot
@@ -366,22 +652,51 @@ In order to use the verb-noun pairs as an input for the VAE, the data first had 
 % Baseline by comparing the wordvector representation with t-sne
 
 % Maybe start a new chapter here?
-To visualize the clusters, each of the pair vector representations in the test set were plotted using t-sne and colored with their corresponding cluster. The exact same train and test set were used to train both the EM and VAE models. The results are shown in figure \fig{TODOFIXFIGURE}
+% To visualize the clusters, each of the pair vector representations in
+% the test set were plotted using t-sne and colored with their
+% corresponding cluster. The exact same train and test set were used to
+% train both the EM and VAE models. The results are shown in figure
+% \ref{TODOFIXFIGURE}
+
+\subsection{Discussion of VAE Results}
+The VAE methods and word vector clustering method did not outperform
+the EM method.  The advantage of having a statistically grounded
+inference method shine trough here, \ie, the non-linear optimization
+process of VAEs can be very complicated and it is not ruled out that
+there may very well be VAE architectures that outperform the EM method
+on this tasks. However, the behavior of these word vectors should be
+studied in more depth to tune the VAE. For example, it is very well
+known that word vectors exhibit linear structure, therefore a linear
+method such as Factor Analysis may be better suited for this
+problem. Moreover, the output distribution of the VAE seems to have a
+dramatic effect on the quality of the obtained clusters, hence in
+future work other output distribution may result in better
+clustering. Lastly, in Figure~\ref{tsnevmf}, it was found that there
+is only one clear cluster that contains the names of people. It might be
+the case that there are many scale differences between verb vectors
+and noun vectors, thus a more intelligent method for combining --- instead
+of simply concatenating the two vectors --- may result in better results.
 
 \section{Conclusion} % Jorn & Bram
 In this study, part of the results presented
 in~\cite{rooth1999inducing} were reproduced. Similar results were
 obtained, however, the results reported in~\cite{rooth1999inducing}
 are not exactly reproduced. A probable cause for this is the different
-methods of data acquisition (\ie, the difference in quality of the
-parser). Moreover, an analysis was performed on the clusters obtained
-and it was shown that the cluster behave as expected, that is,
-probable nouns and verbs within a cluster also often occur in the data
-set. Moreover, it was shown that apart from the high probability verbs
-and nouns, there are cluster for nouns that occur often (with many
-verbs) and vice versa. In sum, unsupervised methods may be highly
-effective in inducing slot annotations and sub-categorizations,
-however, a good train set is very important.
+methods of data acquisition. Moreover, three methods were studied to
+obtaining similar clusters using word representations that capture
+semantic meaning. However, non of these techniques resulted in an
+improvement.  Moreover, an analysis was performed on the clusters
+obtained using the EM method and it was shown that the cluster behave
+as expected, that is, probable nouns and verbs within a cluster also
+often occur in the data set. Moreover, it was shown that apart from
+the high probability verbs and nouns, there are cluster for nouns that
+occur often (with many verbs) and vice versa. The results using the
+word vector methods are disappointing, and a more research may be
+needed to use these word vectors to obtain meaningful clusters.  In
+sum, unsupervised methods may be highly effective in inducing slot
+annotations and sub-categorizations, however, non-linear methods such
+VAEs do not seem a end-all be-all solution to this clustering problem,
+moreover, a good train set is very important.
 
 \bibliographystyle{plain}
 \bibliography{ref}

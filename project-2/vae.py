@@ -4,15 +4,17 @@ import numpy as np
 import torch
 import torch.utils.data
 import torch.nn as nn
+import torch.nn.init as nninit
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
 from fuel.datasets import H5PYDataset
 from fuel.streams import DataStream
-from fuel.schemes import ShuffledScheme
+from fuel.schemes import ShuffledScheme, SequentialScheme
 from fuel.transformers import AgnosticSourcewiseTransformer
 from pycrayon import CrayonClient
+from collections import Counter
 
 LOG2PI = np.log(2 * np.pi)
 EPSILON = 1e-8
@@ -27,17 +29,29 @@ class VAE(nn.Module):
 
         super().__init__()
 
-        self.embedding_size = 35
+        self.embedding_size = 100
         self.dist = dist
         self.temperature = temperature
 
-        self.fc1 = nn.Linear(vector_size, 200)
-        self.fc21 = nn.Linear(200, self.embedding_size)
-        self.fc22 = nn.Linear(200, self.embedding_size)
+        self.fc1 = nn.Linear(vector_size, 300)
+        self.fc11 = nn.Linear(300, 150)
+        self.fc21 = nn.Linear(150, self.embedding_size)
+        self.fc22 = nn.Linear(150, self.embedding_size)
 
-        self.fc3 = nn.Linear(self.embedding_size, 200)
-        self.fc41 = nn.Linear(200, vector_size)
-        self.fc42 = nn.Linear(200, vector_size)
+        nninit.xavier_uniform(self.fc1.weight)
+        nninit.xavier_uniform(self.fc11.weight)
+        nninit.xavier_uniform(self.fc21.weight)
+        nninit.xavier_uniform(self.fc22.weight)
+
+        self.fc3 = nn.Linear(self.embedding_size, 150)
+        self.fc31 = nn.Linear(150, 300)
+        self.fc41 = nn.Linear(300, vector_size)
+        self.fc42 = nn.Linear(300, vector_size)
+
+        nninit.xavier_uniform(self.fc3.weight)
+        nninit.xavier_uniform(self.fc31.weight)
+        nninit.xavier_uniform(self.fc41.weight)
+        nninit.xavier_uniform(self.fc42.weight)
 
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
@@ -45,11 +59,14 @@ class VAE(nn.Module):
 
     def encode(self, x):
         h = self.relu(self.fc1(x))
+        h = self.relu(self.fc11(h))
 
         if self.dist == 'norm':
             return self.fc21(h), self.fc22(h)
         else:
-            return F.softmax(self.fc21(h)), self.fc22(h)
+            alpha = self.fc21(h).exp()
+            alpha = alpha / torch.sum(alpha, dim=1).expand_as(alpha)
+            return alpha, None
 
     def reparametrize(self, mu, logvar):
 
@@ -65,7 +82,9 @@ class VAE(nn.Module):
             unif = torch.rand(mu.size())
             if args.cuda:
                 unif = unif.cuda()
-            gumbel = Variable(-torch.log(-torch.log(unif + EPSILON)))
+            unif = unif * (1 - 1e-7) + EPSILON
+            u = unif.cpu().numpy()
+            gumbel = Variable(-torch.log(-torch.log(unif)))
             logit = (torch.log(mu + EPSILON) + gumbel)
             logit = logit / self.temperature
             z = F.softmax(logit)
@@ -73,6 +92,7 @@ class VAE(nn.Module):
 
     def decode(self, z):
         h = self.relu(self.fc3(z))
+        h = self.relu(self.fc31(h))
         mu, logvar = self.fc41(h), self.fc42(h)
         return mu, logvar
 
@@ -128,7 +148,7 @@ def train(epoch, model, optimizer, train_stream, num_examples, test_stream,
         train_logger.add_scalar_value('loss', float(-loss.data[0]) / len(data))
         optimizer.step()
         if batch_idx % args.log_interval == 0:
-            test(epoch, model, test_stream, test_N)
+            # test(epoch, model, test_stream, test_N)
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), num_examples, 100. * (
                     batch_idx * len(data)) / num_examples, -loss.data[0] / len(
@@ -185,15 +205,15 @@ def load_data(use_cuda=True):
         '/home/jorn/Desktop/outfile.test', which_sets=('test', ))
 
     def stream(data, batch_size=128, volatile=False):
-        scheme = ShuffledScheme(
+        scheme = SequentialScheme(
             examples=data.num_examples, batch_size=batch_size)
         datastream = DataStream(data, iteration_scheme=scheme)
         datastream = ToVariable(
             datastream, which_sources=('noun_vec', 'verb_vec'), cuda=use_cuda)
         return datastream
 
-    return (stream(train_data, batch_size=args.batch_size), stream(
-        test_data, batch_size=args.batch_size, volatile=True),
+    return (stream(train_data, batch_size=1024), stream(
+        test_data, batch_size=1024, volatile=True),
             train_data.num_examples, test_data.num_examples)
 
 

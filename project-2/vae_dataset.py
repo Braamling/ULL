@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 
 import numpy as np
 from tqdm import tqdm
+import gensim
 
 from utils import H5PYDatasetCreator
 
@@ -63,7 +64,21 @@ def create_train_test_set(verbs, nouns, verb_pairs):
         for n, c in all_n.items():
             train_set += [(v, n)] * c
 
-    return train_set, test_set
+    ts = set(train_set)
+    test_verbs_ = []
+    verb_strings, counts = zip(*[(a, b) for a, b in verbs.items()
+                                 if b <= 3000 and b >= 30])
+    counts = np.array(counts)
+    verb_prob = counts / counts.sum()
+
+    while len(test_verbs_) < len(test_set):
+        print(len(selected_pairs), end='\r')
+        selected_verb = sample_word(verb_strings, verb_prob)
+        tverb, tnoun = test_set[len(test_verbs_)]
+        if (selected_verb, tnoun) not in ts:
+            test_verbs_.append(selected_verb)
+
+    return train_set, test_set, test_verbs_
 
 
 def assert_set_correctness(train_set, test_set):
@@ -88,14 +103,17 @@ def main(filename, glove_filename):
     nouns = []
     verb_pairs = defaultdict(Counter)
 
-    vectors = {}
+    # vectors = {}
 
-    with open(glove_filename) as f:
-        for i, line in enumerate(tqdm(f)):
-            splits = line.split()
-            word, values = splits[0], splits[1:]
-            values = np.array([float(v) for v in values])
-            vectors[word] = values
+    # with open(glove_filename) as f:
+    #     for i, line in enumerate(tqdm(f)):
+    #         splits = line.split()
+    #         word, values = splits[0], splits[1:]
+    #         values = np.array([float(v) for v in values])
+    #         vectors[word] = values
+
+    vectors = gensim.models.KeyedVectors.load_word2vec_format(
+        '/home/jorn/Downloads/GoogleNews-vectors-negative300.bin', binary=True)
 
     with open(filename) as f:
         for i, line in enumerate(tqdm(f)):
@@ -110,26 +128,36 @@ def main(filename, glove_filename):
     verbs = Counter(verbs)
     nouns = Counter(nouns)
 
-    train_set, test_set = create_train_test_set(verbs, nouns, verb_pairs)
+    train_set, test_set, test_verbs = create_train_test_set(
+        verbs, nouns, verb_pairs)
     assert_set_correctness(train_set, test_set)
 
     write_set(train_set, TRAIN_PAIRS_FILE)
     write_set(test_set, TEST_PAIRS_FILE)
 
-    creator = H5PYDatasetCreator('/home/jorn/Desktop/outfile.test')
+    with open('storage/test_verbs_google.txt', 'w') as f:
+        for v in test_verbs:
+            vec = ", ".join([str(a) for a in vectors[v]])
+            f.write('{}, {}\n'.format(v, vec))
+
+    creator = H5PYDatasetCreator('/home/jorn/Desktop/outfile_google.test')
 
     creator.add_split('train', len(train_set))
     creator.add_split('test', len(test_set))
     creator.add_source('noun_vec', (300,), np.float32)
     creator.add_source('verb_vec', (300,), np.float32)
+    creator.add_source('idx', (1,), np.int)
 
     print('Add train set')
-    for v, n in tqdm(train_set):
-        creator.add_row('train', verb_vec=vectors[v], noun_vec=vectors[n])
+    for i, (v, n) in enumerate(tqdm(train_set)):
+        creator.add_row('train', verb_vec=vectors[v], noun_vec=vectors[n],
+                        idx=i)
+
     print('Add test set')
-    for v, n in tqdm(test_set):
-        creator.add_row('test', verb_vec=vectors[v], noun_vec=vectors[n])
+    for i, (v, n) in enumerate(tqdm(test_set)):
+        creator.add_row('test', verb_vec=vectors[v], noun_vec=vectors[n],
+                        idx=1)
 
 
 if __name__ == "__main__":
-    main('data/all_pairs', '/home/jorn/Downloads/glove/glove.6B.300d.txt')
+    main('data/all_pairs', '/home/jorn/Downloads/glove/glove.6B.100d.txt')
